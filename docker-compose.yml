@@ -39,7 +39,6 @@ services:
     mysqldb:
         image: mysql:${MYSQL_VERSION}
         container_name: ${MYSQL_HOST}
-        command: --init-file /data/application/init.sql
         restart: always
         env_file:
             - ".env"
@@ -52,4 +51,8 @@ services:
             - "8989:3306"
         volumes:
             - "./data/db/mysql:/var/lib/mysql"
-            - ./web/database/init.sql:/data/application/init.sql
+
+    migrate:
+        build:
+            context: ./web/database/migrate/
+            dockerfile: ./Dockerfile
