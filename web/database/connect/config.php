@@ -1,5 +1,7 @@
 <?php
 
+namespace aktivgo\PhpRestApi;
+
 return [
     'host' => 'mysql',
     'db_name' => 'test',

@@ -1,7 +1,8 @@
 <?php
 
-require_once 'database/connect.php';
-require_once 'App.php';
+use aktivgo\PhpRestApi\App;
+
+require "../composer/vendor/autoload.php";
 
 global $db;
 

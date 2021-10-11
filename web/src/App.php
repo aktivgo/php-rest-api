@@ -1,5 +1,9 @@
 <?php
 
+namespace aktivgo\PhpRestApi;
+
+use PDO;
+
 header('Content-type: json/application');
 
 class App
