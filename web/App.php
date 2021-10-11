@@ -1,6 +1,7 @@
 <?php
 
 namespace aktivgo\PhpRestApi;
+
 use PDO;
 use PDOException;
 
@@ -8,16 +9,10 @@ header('Content-type: json/application');
 
 class App
 {
-    public static function connectToDb() : PDO {
+    public static function connectToDb(): PDO
+    {
         try {
-            $config = [
-                'host' => 'mysql',
-                'db_name' => 'test',
-                'username' => 'dev',
-                'password' => 'dev',
-                'charset' => 'utf8'
-            ];
-            return new PDO('mysql:host=' . $config['host'] . ';dbname=' . $config['db_name'], $config['username'], $config['password']);
+            return new PDO('mysql:host=' . $_ENV['MYSQL_HOST'] . ';dbname=' . $_ENV['MYSQL_DATABASE'], $_ENV['MYSQL_USER'], $_ENV['MYSQL_PASSWORD']);
         } catch (PDOException $e) {
             echo $e->getMessage();
             die();
@@ -43,11 +38,14 @@ class App
 
     public static function getUser($db, $id)
     {
-        self::checkId($db, $id);
-
         $sth = $db->prepare("select * from users where id = $id");
         $sth->execute();
         $res = $sth->fetch(PDO::FETCH_ASSOC);
+
+        if (!$res) {
+            self::echoResponseCode('User not found', 404);
+            die();
+        }
 
         self::echoResponseCode($res, 200);
     }
@@ -76,8 +74,6 @@ class App
 
     public static function deleteUser($db, $id)
     {
-        self::checkId($db, $id);
-
         $sth = $db->prepare("delete from users where id = $id");
         $sth->execute();
 
@@ -104,7 +100,7 @@ class App
 
     private static function checkData($data)
     {
-        if(!isset($data) || $data['firstName'] === '' || $data['lastName'] === '' || !isset($data['firstName']) || !isset($data['lastName'])) {
+        if (!isset($data) || $data['firstName'] === '' || $data['lastName'] === '' || !isset($data['firstName']) || !isset($data['lastName'])) {
             self::echoResponseCode('The fields are incorrect', 400);
             die();
         }

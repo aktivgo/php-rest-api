@@ -20,6 +20,8 @@ services:
     php:
         image: nanoninja/php-fpm:${PHP_VERSION}
         restart: always
+        env_file:
+            - ".env"
         volumes:
             - "./config/php/php.ini:/usr/local/etc/php/conf.d/php.ini"
             - "./web:/var/www/html"
@@ -57,9 +59,3 @@ services:
         build:
             context: ./web/database/
             dockerfile: ./web/database/Dockerfile
-
-    composer:
-        image: composer
-        volumes:
-            - ./composer:/app
-        working_dir: /app
