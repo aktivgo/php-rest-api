@@ -1,6 +1,7 @@
 <?php
 
 use aktivgo\PhpRestApi\App;
+
 require_once "/var/www/composer/vendor/autoload.php";
 
 $db = App::connectToDb();

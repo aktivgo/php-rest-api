@@ -1,4 +1,4 @@
-include .env
+include .env.dev
 
 migrations:
 	@docker run --network host php-rest-api_migrate -path=/migrations/ -database "mysql://dev:dev@tcp(task2.loc:8989)/test" up
