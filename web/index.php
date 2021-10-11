@@ -1,10 +1,9 @@
 <?php
 
 use aktivgo\PhpRestApi\App;
+require_once "/var/www/composer/vendor/autoload.php";
 
-require "../composer/vendor/autoload.php";
-
-global $db;
+$db = App::connectToDb();
 
 $method = strtoupper($_SERVER['REQUEST_METHOD']);
 $url = rtrim($_SERVER['REQUEST_URI'], '/');
