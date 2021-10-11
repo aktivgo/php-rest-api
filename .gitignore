@@ -1,4 +1,5 @@
 .idea
 data
 composer/vendor
+composer/composer.lock
 .env.dev
