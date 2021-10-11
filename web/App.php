@@ -1,10 +1,30 @@
 <?php
 
+namespace aktivgo\PhpRestApi;
+use PDO;
+use PDOException;
+
 header('Content-type: json/application');
 
 class App
 {
-    static function getUsers($db, $get)
+    public static function connectToDb() : PDO {
+        try {
+            $config = [
+                'host' => 'mysql',
+                'db_name' => 'test',
+                'username' => 'dev',
+                'password' => 'dev',
+                'charset' => 'utf8'
+            ];
+            return new PDO('mysql:host=' . $config['host'] . ';dbname=' . $config['db_name'], $config['username'], $config['password']);
+        } catch (PDOException $e) {
+            echo $e->getMessage();
+            die();
+        }
+    }
+
+    public static function getUsers($db, $get)
     {
         $page = $get['page'] ?? 1;
         $limit = 3;
@@ -21,7 +41,7 @@ class App
         self::echoResponseCode($userList, 200);
     }
 
-    static function getUser($db, $id)
+    public static function getUser($db, $id)
     {
         self::checkId($db, $id);
 
@@ -32,7 +52,7 @@ class App
         self::echoResponseCode($res, 200);
     }
 
-    static function addUser($db, $data)
+    public static function addUser($db, $data)
     {
         self::checkData($data);
 
@@ -43,7 +63,7 @@ class App
         echo $db->lastInsertId();
     }
 
-    static function updateUser($db, $id, $data)
+    public static function updateUser($db, $id, $data)
     {
         self::checkId($db, $id);
         self::checkData($data);
@@ -54,7 +74,7 @@ class App
         http_response_code(202);
     }
 
-    static function deleteUser($db, $id)
+    public static function deleteUser($db, $id)
     {
         self::checkId($db, $id);
 
@@ -64,13 +84,13 @@ class App
         http_response_code(204);
     }
 
-    static function echoResponseCode($res, $code)
+    public static function echoResponseCode($res, $code)
     {
         http_response_code($code);
         echo json_encode($res);
     }
 
-    static function checkId($db, $id)
+    private static function checkId($db, $id)
     {
         $sth = $db->prepare("select * from users where id = $id");
         $sth->execute();
@@ -82,7 +102,7 @@ class App
         }
     }
 
-    static function checkData($data)
+    private static function checkData($data)
     {
         if(!isset($data) || $data['firstName'] === '' || $data['lastName'] === '' || !isset($data['firstName']) || !isset($data['lastName'])) {
             self::echoResponseCode('The fields are incorrect', 400);
