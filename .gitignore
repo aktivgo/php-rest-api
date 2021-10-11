@@ -2,4 +2,3 @@
 data
 composer/vendor
 .env.dev
-!/composer/composer.lock
