@@ -2,30 +2,50 @@
 
 use aktivgo\PhpRestApi\App;
 
-require_once "/var/www/composer/vendor/autoload.php";
+require_once __DIR__ . "/composer/vendor/autoload.php";
+var_dump(__DIR__);
+die();
 
-$db = App::connectToDb();
+use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\Route;
+use Symfony\Component\HttpFoundation\Request;
 
-$method = strtoupper($_SERVER['REQUEST_METHOD']);
-$url = rtrim($_SERVER['REQUEST_URI'], '/');
-$urlArr = explode('/', $url);
+$context = null;
+$parameters = null;
 
-if ($urlArr[1] != 'users' && !preg_match("/users\?page=\d+$/", $urlArr[1])) {
+try {
+
+    $routes = new RouteCollection();
+    $context = new RequestContext(Request::createFromGlobals());
+
+    // Роут для /users
+    $routeUsers = new Route('/users');
+    $routes->add('users', $routeUsers);
+
+    // Роут для /users/id
+    $routeUsersId = new Route('/users/{id}');
+    $routes->add('usersId', $routeUsersId);
+
+    $matcher = new UrlMatcher($routes, $context);
+    $parameters = $matcher->match($context['pathInfo']);
+} catch (Exception $e) {
     App::echoResponseCode('The request is incorrect', 404);
     return;
 }
 
-$id = $urlArr[2];
+$db = App::connectToDb();
 
 $data = file_get_contents('php://input');
 $data = json_decode($data, true);
 
-if (!$id) {
-    if ($method == 'GET') {
+if (!$parameters['id']) {
+    if ($context['method'] == 'GET') {
         App::getUsers($db, $_GET);
         return;
     }
-    if ($method == 'POST') {
+    if ($context['method'] == 'POST') {
         App::addUser($db, $data);
         return;
     }
@@ -34,17 +54,17 @@ if (!$id) {
     return;
 }
 
-if ($method == 'GET') {
-    App::getUser($db, $id);
+if ($context['method'] == 'GET') {
+    App::getUser($db, $parameters['id']);
     return;
 }
 
-if ($method == 'PUT') {
-    App::updateUser($db, $id, $data);
+if ($context['method'] == 'PUT') {
+    App::updateUser($db, $parameters['id'], $data);
     return;
 }
 
-if ($method == 'DELETE') {
-    App::deleteUser($db, $id);
+if ($context['method'] == 'DELETE') {
+    App::deleteUser($db, $parameters['id']);
     return;
 }

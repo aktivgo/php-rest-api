@@ -25,7 +25,6 @@ services:
         volumes:
             - "./config/php/php.ini:/usr/local/etc/php/conf.d/php.ini"
             - "./web:/var/www/html"
-            - "./composer/:/var/www/composer/"
 
     myadmin:
         image: phpmyadmin/phpmyadmin
@@ -58,4 +57,4 @@ services:
     migrate:
         build:
             context: ./web/database/
-            dockerfile: ./web/database/Dockerfile
+            dockerfile: ./Dockerfile

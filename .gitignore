@@ -1,5 +1,5 @@
 .idea
 data
-composer/vendor
-composer/composer.lock
-.env.dev
+web/composer/vendor
+web/composer/composer.lock
+.env.example
