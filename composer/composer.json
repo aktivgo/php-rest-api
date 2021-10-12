@@ -11,7 +11,6 @@
     ],
     "require": {
         "symfony/routing": "^5.3",
-        "vlucas/phpdotenv": "^5.3"
     },
     "autoload": {
         "psr-4": {
