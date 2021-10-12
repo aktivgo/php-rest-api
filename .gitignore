@@ -2,4 +2,4 @@
 data
 web/composer/vendor
 web/composer/composer.lock
-.env.example
+.env
