@@ -3,8 +3,6 @@
 use aktivgo\PhpRestApi\App;
 
 require_once __DIR__ . "/composer/vendor/autoload.php";
-var_dump(__DIR__);
-die();
 
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;

@@ -64,7 +64,7 @@ class App
     public static function updateUser($db, $id, $data)
     {
         self::checkId($db, $id);
-        self::checkData($data);
+        self::checkData($db, $data);
 
         $sth = $db->prepare("update users set firstName = :firstName, lastName = :lastName where id = $id");
         $sth->execute($data);
@@ -98,11 +98,37 @@ class App
         }
     }
 
-    private static function checkData($data)
+    private static function checkData($db, $data)
     {
-        if (!isset($data) || $data['firstName'] === '' || $data['lastName'] === '' || !isset($data['firstName']) || !isset($data['lastName'])) {
+        /*$columnNames = self::getColumnNames($db);
+        foreach ($columnNames as $columnName) {
+            if(!isset($data) || $data[$columnName] === '' || isset($data[$columnName])) {
+                self::echoResponseCode('The fields are incorrect', 400);
+                die();
+            }
+            $regex = '/^[_a-z0-9-]+(.[_a-z0-9-]+)*@[a-z0-9-]+(.[a-z0-9-]+)*(.[a-z]{2,4})$/';
+            if ($columnName['3'] === 'email' && preg_match($regex, $columnName['3'])) {
+
+            }
+        }*/
+
+        if (!isset($data) || $data['firstName'] === '' || $data['lastName'] === '' || $data['email']
+            || !isset($data['firstName']) || !isset($data['lastName']) || !isset($data['email'])) {
             self::echoResponseCode('The fields are incorrect', 400);
             die();
         }
     }
+
+    /*private static function getColumnNames($db): array
+    {
+        $sth = $db->prepare("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='test' AND TABLE_NAME = users");
+        $sth->execute();
+        $output = [];
+        while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+            $output[] = $row['COLUMN_NAME'];
+        }
+        return $output;
+    }*/
+
+
 }

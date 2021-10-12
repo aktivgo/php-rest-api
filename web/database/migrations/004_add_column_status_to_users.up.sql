@@ -1,0 +1,1 @@
+alter table users add column status boolean null default false;
