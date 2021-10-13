@@ -1,50 +1,60 @@
 <?php
 
-use aktivgo\PhpRestApi\App;
-
-require_once __DIR__ . "/composer/vendor/autoload.php";
-
+use aktivgo\PhpRestApi\app\Activation;
+use aktivgo\PhpRestApi\app\App;
+use \aktivgo\PhpRestApi\database\Database;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\HttpFoundation\Request;
 
-$context = null;
-$parameters = null;
+require_once __DIR__ . "/composer/vendor/autoload.php";
 
 try {
+    // Роут для /users
+    $routeUsers = new Route('/users', [] , ['id' => '\\d+']);
+    // Роут для /users/id
+    $routeUsersId = new Route('/users/{id}', [] , ['id' => '\\d+']);
+    // Роут для подтверждения почты
+    $routeUsersActivation = new Route("/users/activation");
 
     $routes = new RouteCollection();
-    $context = new RequestContext(Request::createFromGlobals());
-
-    // Роут для /users
-    $routeUsers = new Route('/users');
     $routes->add('users', $routeUsers);
-
-    // Роут для /users/id
-    $routeUsersId = new Route('/users/{id}');
     $routes->add('usersId', $routeUsersId);
+    $routes->add('usersActivation', $routeUsersActivation);
 
+    $context = new RequestContext();
+    $context->fromRequest(Request::createFromGlobals());
     $matcher = new UrlMatcher($routes, $context);
-    $parameters = $matcher->match($context['pathInfo']);
+    $parameters = $matcher->match($context->getPathInfo());
 } catch (Exception $e) {
     App::echoResponseCode('The request is incorrect', 404);
     return;
 }
 
-$db = App::connectToDb();
+$db = Database::getConnection();
+$table = 'users';
+
+if($parameters['_route'] === 'usersActivation') {
+    $hash = $context->getQueryString();
+    if(!$hash) {
+        App::echoResponseCode('The request is incorrect', 404);
+    }
+    Activation::confirmEmail(substr($hash, 5));
+    return;
+}
 
 $data = file_get_contents('php://input');
 $data = json_decode($data, true);
 
 if (!$parameters['id']) {
-    if ($context['method'] == 'GET') {
-        App::getUsers($db, $_GET);
+    if ($context->getMethod() === 'GET') {
+        App::getUsers($db, $table, $_GET);
         return;
     }
-    if ($context['method'] == 'POST') {
-        App::addUser($db, $data);
+    if ($context->getMethod() === 'POST') {
+        App::addUser($db, $table, $data);
         return;
     }
 
@@ -52,17 +62,17 @@ if (!$parameters['id']) {
     return;
 }
 
-if ($context['method'] == 'GET') {
-    App::getUser($db, $parameters['id']);
+if ($context->getMethod() === 'GET') {
+    App::getUser($db, $table, $parameters['id']);
     return;
 }
 
-if ($context['method'] == 'PUT') {
-    App::updateUser($db, $parameters['id'], $data);
+if ($context->getMethod() === 'PUT') {
+    App::updateUser($db, $table, $parameters['id'], $data);
     return;
 }
 
-if ($context['method'] == 'DELETE') {
-    App::deleteUser($db, $parameters['id']);
+if ($context->getMethod() === 'DELETE') {
+    App::deleteUser($db, $table, $parameters['id']);
     return;
 }
