@@ -26,8 +26,10 @@ try {
 
     $context = new RequestContext();
     $context->fromRequest(Request::createFromGlobals());
+
     $matcher = new UrlMatcher($routes, $context);
     $parameters = $matcher->match($context->getPathInfo());
+
 } catch (Exception $e) {
     App::echoResponseCode('The request is incorrect', 404);
     return;
@@ -37,11 +39,11 @@ $db = Database::getConnection();
 $table = 'users';
 
 if ($parameters['_route'] === 'usersActivation') {
-    $hash = $context->getQueryString();
+    $hash = substr($context->getQueryString(), 5);
     if (!$hash) {
         App::echoResponseCode('The request is incorrect', 404);
     }
-    Activation::confirmEmail(substr($hash, 5));
+    Activation::confirmEmail($hash);
     return;
 }
 

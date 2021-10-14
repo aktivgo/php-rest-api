@@ -3,53 +3,82 @@
 namespace aktivgo\PhpRestApi\app;
 
 use aktivgo\PhpRestApi\database\Database;
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 class Activation
 {
+
     private static string $key = 'jrgdfklgicohvbaWD';
 
     public static function generateToken($id): string
     {
-        return JWT::encode($id, self::$key);
+        $token = [
+            'exp' => time() + 30,
+            'id' => $id
+        ];
+        return JWT::encode($token, self::$key);
     }
 
-    private static function decodeToken($jwt): string
+    private static function decodeToken($jwt): object
     {
         return JWT::decode($jwt, self::$key, array('HS256'));
     }
 
     public static function sendMessage($email, $token)
     {
-        $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-type: text/html; charset=utf-8\r\n";
-        $headers .= "To: <$email>\r\n";
-        $headers .= "From: <mail@example.com>\r\n";
-        $message = '
-                <html lang="ru">
-                <head>
-                <title>Подтвердите Email</title>
-                </head>
-                <body>
-                <p>Чтобы подтвердить Email, перейдите по <a href="http://task2.loc/activation?hash=' . $token . '">ссылке</a></p>
-                </body>
-                </html>
-                ';
-        if (mail($email, "Подтвердите Email на сайте", $message, $headers)) {
-            echo 'Подтвердите на почте';
+        $mail = new PHPMailer(true);
+        try {
+            $mail->CharSet = 'UTF-8';
+
+            $mail->isSMTP();
+            $mail->SMTPAuth = true;
+            $mail->SMTPDebug = 0;
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
+
+            $mail->Host = 'ssl://smtp.yandex.ru';
+            $mail->Port = 465;
+            $mail->Username = 'vladko4kin1@yandex.ru';
+            $mail->Password = 'Kasper0809_5';
+
+            $mail->setFrom('vladko4kin1@yandex.ru', 'task2');
+            $mail->addAddress($email);
+
+            $mail->Subject = 'Подтвердите регистрацию на сайте';
+            $body = '<H1> Здравствуйте! </H1> <br/> Чтобы подтвердить регистрацию на нашем сайте, пожалуйста, пройдите по <a href="'.'http://task2.loc/users/activation?hash='.$token .'"> ссылке </a> . <br> Если это были не Вы, то просто игнорируйте это письмо. <br/> <br/> <strong>Внимание!</strong> Ссылка действительна 24 часа.';
+            $mail->msgHTML($body);
+
+            $mail->send();
+        } catch (Exception $e) {
+            APP::echoResponseCode([], 404);
+            die();
         }
     }
 
     public static function confirmEmail($token)
     {
-        $id = self::decodeToken($token);
+        try {
+            $data = self::decodeToken($token);
+            $id = $data->id;
 
-        $db = Database::getConnection();
-        $sth = $db->prepare("update users set status = true where id = $id");
-        $sth->execute();
-
-        echo 'Почта успешно подтверждена!';
-
-        http_response_code(202);
+            $db = Database::getConnection();
+            $sth = $db->prepare("update users set status = true where id = $id and status = false");
+            if($sth->execute()) {
+                APP::echoResponseCode('Почта успешно подтверждена!', 200);
+                return;
+            }
+            APP::echoResponseCode('Почта уже подтверждена!', 200);
+        } catch (ExpiredException $e) {
+            APP::echoResponseCode('Ссылка больше не действительна', 404);
+            die();
+        }
     }
 }

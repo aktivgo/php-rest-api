@@ -52,9 +52,7 @@ class App
         $id = $db->lastInsertId();
 
         $token = Activation::generateToken($id);
-        var_dump($token);
-        //Activation::sendMessage($data['email'], $token);
-        //Activation::confirmEmail($token);
+        Activation::sendMessage($data['email'], $token);
 
         http_response_code(201);
         echo $id;
@@ -104,7 +102,8 @@ class App
     // Проверяет массив данных на корректность
     private static function checkData($data)
     {
-        if (!isset($data) || !isset($data['firstName']) || !isset($data['lastName']) || !isset($data['email'])) {
+        if (!isset($data) || !isset($data['firstName']) || !isset($data['lastName']) || !isset($data['email'])
+        || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             self::echoResponseCode('The fields are incorrect', 400);
             die();
         }
