@@ -13,7 +13,7 @@ require_once __DIR__ . "/composer/vendor/autoload.php";
 
 try {
     // Роут для /users
-    $routeUsers = new Route('/users', [], ['id' => '\\d+']);
+    $routeUsers = new Route('/users');
     // Роут для /users/id
     $routeUsersId = new Route('/users/{id}', [], ['id' => '\\d+']);
     // Роут для подтверждения почты
@@ -29,7 +29,6 @@ try {
 
     $matcher = new UrlMatcher($routes, $context);
     $parameters = $matcher->match($context->getPathInfo());
-
 } catch (Exception $e) {
     App::echoResponseCode('The request is incorrect', 404);
     return;
