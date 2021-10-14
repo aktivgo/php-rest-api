@@ -15,7 +15,7 @@ class Activation
     public static function generateToken($id): string
     {
         $token = [
-            'exp' => time() + 30,
+            'exp' => time() + 60,
             'id' => $id
         ];
         return JWT::encode($token, self::$key);
