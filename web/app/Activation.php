@@ -46,7 +46,7 @@ class Activation
             $mail->Host = 'ssl://smtp.yandex.ru';
             $mail->Port = 465;
             $mail->Username = 'vladko4kin1@yandex.ru';
-            $mail->Password = 'Kasper0809_5';
+            $mail->Password = 'iwupgzonsciduanx';
 
             $mail->setFrom('vladko4kin1@yandex.ru', 'task2');
             $mail->addAddress($email);
