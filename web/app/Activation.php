@@ -10,23 +10,22 @@ use PHPMailer\PHPMailer\Exception;
 
 class Activation
 {
-    private static string $key = 'jrgdfklgicohvbaWD';
 
-    public static function generateToken($id): string
+    public static function generateToken(string $id): string
     {
         $token = [
-            'exp' => time() + 60,
+            'exp' => time() + 30,
             'id' => $id
         ];
-        return JWT::encode($token, self::$key);
+        return JWT::encode($token, $_ENV['KEY']);
     }
 
-    private static function decodeToken($jwt): object
+    private static function decodeToken(string $token): object
     {
-        return JWT::decode($jwt, self::$key, array('HS256'));
+        return JWT::decode($token, $_ENV['KEY'], array('HS256'));
     }
 
-    public static function sendMessage($email, $token)
+    public static function sendMessage(string $email, string $token)
     {
         $mail = new PHPMailer(true);
         try {
@@ -43,16 +42,17 @@ class Activation
                 ]
             ];
 
-            $mail->Host = 'ssl://smtp.yandex.ru';
+            $mail->Host = $_ENV['MAIL_HOST'];
             $mail->Port = 465;
-            $mail->Username = 'vladko4kin1@yandex.ru';
-            $mail->Password = 'iwupgzonsciduanx';
+            $mail->Username = $_ENV['MAIL_ADDRESS'];
+            $mail->Password = $_ENV['MAIL_PASSWORD'];
 
-            $mail->setFrom('vladko4kin1@yandex.ru', 'task2');
+            $mail->setFrom($_ENV['MAIL_ADDRESS'], 'task2');
             $mail->addAddress($email);
-
             $mail->Subject = 'Подтвердите регистрацию на сайте';
-            $body = '<H1> Здравствуйте! </H1> <br/> Чтобы подтвердить регистрацию на нашем сайте, пожалуйста, пройдите по <a href="'.'http://task2.loc/users/activation?hash='.$token .'"> ссылке </a> . <br> Если это были не Вы, то просто игнорируйте это письмо. <br/> <br/> <strong>Внимание!</strong> Ссылка действительна 30 секунд.';
+
+            $baseUrl = $_SERVER['NGINX_HOST'];
+            $body = '<H1> Здравствуйте! </H1> <br/> Чтобы подтвердить регистрацию на нашем сайте, пожалуйста, пройдите по <a href="' . 'https://' . $baseUrl . '/users/activation?token=' . $token . '"> ссылке </a> . <br> Если это были не Вы, то просто игнорируйте это письмо. <br/> <br/> <strong>Внимание!</strong> Ссылка действительна 24 часа.';
             $mail->msgHTML($body);
 
             $mail->send();
@@ -62,21 +62,21 @@ class Activation
         }
     }
 
-    public static function confirmEmail($token)
+    public static function confirmEmail(string $token)
     {
         try {
             $data = self::decodeToken($token);
             $id = $data->id;
 
             $db = Database::getConnection();
-            $sth = $db->prepare("update users set status = true where id = $id and status = false");
-            if($sth->execute()) {
-                APP::echoResponseCode('Почта успешно подтверждена!', 200);
+            $sth = $db->prepare("update users set status = true where id = :id and status = false");
+            if ($sth->execute(['id' => $id])) {
+                APP::echoResponseCode(['Почта успешно подтверждена'], 200);
                 return;
             }
-            APP::echoResponseCode('Почта уже подтверждена!', 200);
+            APP::echoResponseCode(['Почта уже подтверждена'], 200);
         } catch (ExpiredException $e) {
-            APP::echoResponseCode('Ссылка больше не действительна', 404);
+            APP::echoResponseCode(['Ссылка больше не действительна'], 404);
             die();
         }
     }

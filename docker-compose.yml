@@ -53,8 +53,3 @@ services:
             - "8989:3306"
         volumes:
             - "./data/db/mysql:/var/lib/mysql"
-
-    migrate:
-        build:
-            context: ./web/database/
-            dockerfile: ./Dockerfile
