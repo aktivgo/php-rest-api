@@ -10,7 +10,6 @@ use PHPMailer\PHPMailer\Exception;
 
 class Activation
 {
-
     private static string $key = 'jrgdfklgicohvbaWD';
 
     public static function generateToken($id): string
