@@ -13,14 +13,8 @@ class Database
     {
         try {
             if (self::$connection === null) {
-                //$config = require_once '../configs/mysql.php';
-                $config = [
-                    'host' => $_ENV['MYSQL_HOST'],
-                    'dbname' => $_ENV['MYSQL_DATABASE'],
-                    'username' => $_ENV['MYSQL_USER'],
-                    'password' => $_ENV['MYSQL_PASSWORD']
-                ];
-                self::$connection = new PDO('mysql:host=' . $config['host'] . ';dbname=' . $config['dbname'], $config['username'], $config['password']);
+                $config = require_once './config/mysql.php';
+                self::$connection = new PDO('mysql:host=' . $config['host'] . ';dbname=' . $config['db_name'], $config['username'], $config['password']);
             }
             return self::$connection;
         } catch (PDOException $e) {

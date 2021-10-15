@@ -36,7 +36,7 @@ try {
 
 $db = Database::getConnection();
 
-if ($parameters['_route'] === 'usersActivation') {
+if ($parameters['_route'] === 'userActivation') {
     $token = $_GET['token'];
     if (!$token) {
         App::echoResponseCode(['The request is incorrect'], 404);

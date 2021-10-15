@@ -3,8 +3,8 @@
 namespace aktivgo\PhpRestApi\app;
 
 use aktivgo\PhpRestApi\database\Database;
-use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
+use PDO;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -14,8 +14,8 @@ class Activation
     public static function generateToken(string $id): string
     {
         $token = [
-            'exp' => time() + 30,
-            'id' => $id
+            'id' => $id,
+            'lifeTime' => time() + 100000
         ];
         return JWT::encode($token, $_ENV['KEY']);
     }
@@ -52,7 +52,7 @@ class Activation
             $mail->Subject = 'Подтвердите регистрацию на сайте';
 
             $baseUrl = $_SERVER['NGINX_HOST'];
-            $body = '<H1> Здравствуйте! </H1> <br/> Чтобы подтвердить регистрацию на нашем сайте, пожалуйста, пройдите по <a href="' . 'https://' . $baseUrl . '/users/activation?token=' . $token . '"> ссылке </a> . <br> Если это были не Вы, то просто игнорируйте это письмо. <br/> <br/> <strong>Внимание!</strong> Ссылка действительна 24 часа.';
+            $body = '<H1> Здравствуйте! </H1> <br/> Чтобы подтвердить регистрацию на нашем сайте, пожалуйста, пройдите по <a href="' . 'http://' . $baseUrl . '/users/activation?token=' . $token . '"> ссылке </a> . <br> Если это были не Вы, то просто игнорируйте это письмо. <br/> <br/> <strong>Внимание!</strong> Ссылка действительна 24 часа.';
             $mail->msgHTML($body);
 
             $mail->send();
@@ -64,20 +64,30 @@ class Activation
 
     public static function confirmEmail(string $token)
     {
-        try {
-            $data = self::decodeToken($token);
-            $id = $data->id;
+        $data = self::decodeToken($token);
+        $id = $data->id;
 
-            $db = Database::getConnection();
-            $sth = $db->prepare("update users set status = true where id = :id and status = false");
-            if ($sth->execute(['id' => $id])) {
-                APP::echoResponseCode(['Почта успешно подтверждена'], 200);
-                return;
-            }
-            APP::echoResponseCode(['Почта уже подтверждена'], 200);
-        } catch (ExpiredException $e) {
-            APP::echoResponseCode(['Ссылка больше не действительна'], 404);
+        $db = Database::getConnection();
+
+        // Если подтверждённый пользователь снова переходит по ссылке
+        $sth = $db->prepare("select * from users where id = :id and status = true");
+        $sth->execute(['id' => $id]);
+        if ($sth->fetch(PDO::FETCH_ASSOC)) {
+            APP::echoResponseCode(['The mail has already been confirmed'], 200);
             die();
+        }
+
+        // Если время жизни токена закончилось, удаляем пользователя
+        if ($data->lifeTime <= time()) {
+            APP::deleteUser(Database::getConnection(), $id);
+            APP::echoResponseCode(['The token is invalid'], 204);
+            die();
+        }
+
+        // Подтверждение почты
+        $sth = $db->prepare("update users set status = true where id = :id");
+        if ($sth->execute(['id' => $id])) {
+            APP::echoResponseCode(['The mail has been successfully confirmed'], 200);
         }
     }
 }
