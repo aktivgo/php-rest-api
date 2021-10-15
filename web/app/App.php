@@ -34,7 +34,7 @@ class App
         $res = $sth->fetch(PDO::FETCH_ASSOC);
 
         if (!$res) {
-            self::echoResponseCode('User not found', 404);
+            self::echoResponseCode(['User not found'], 404);
             die();
         }
 
